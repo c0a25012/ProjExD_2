@@ -3,6 +3,7 @@ import random
 import sys
 import time
 import pygame as pg
+import math
 
 
 WIDTH, HEIGHT = 1100, 650
@@ -33,9 +34,9 @@ def gameover(screen: pg.Surface) -> None:
     引数：スクリーンSurface
     戻り値：なし
     """
-     # 黒い画面を作る
+    # 黒い画面を作る
     black = pg.Surface((WIDTH, HEIGHT))  # 黒い矩形を描画する
-    black.set_alpha(180)  # 透明度を設定する
+    black.set_alpha(150)  # 透明度を設定する
     pg.draw.rect(black, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
 
     # Game Over の文字を作る
@@ -45,7 +46,7 @@ def gameover(screen: pg.Surface) -> None:
 
     # 泣いているこうかとん画像を作る
     kk_img = pg.image.load("fig/8.png")
-    kk_img = pg.transform.rotozoom(kk_img, 0, 1.5)
+    kk_img = pg.transform.rotozoom(kk_img, 0, 0.9)
     kk_rct = kk_img.get_rect(center=((WIDTH // 2) - 240, (HEIGHT // 2)))
     kk_rct_2 = kk_img.get_rect(center=((WIDTH // 2) + 240, (HEIGHT // 2)))
     
@@ -56,7 +57,6 @@ def gameover(screen: pg.Surface) -> None:
     screen.blit(black, (0, 0))
 
     # スクリーンに貼って表示する
-    screen.blit(black, (0, 0))
     pg.display.update()
     time.sleep(5)
 
@@ -102,6 +102,25 @@ def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
 
     return kk_imgs
 
+def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]) -> tuple[float, float]:
+    """
+    爆弾がこうかとんに近づく方向ベクトルを計算する関数
+    引数：爆弾Rect、こうかとんRect、現在の速度ベクトル
+    戻り値：移動方向ベクトル
+    """
+    diff_x = dst.centerx - org.centerx
+    diff_y = dst.centery - org.centery
+
+    norm = math.sqrt(diff_x**2 + diff_y**2)
+
+    if norm < 300:
+        return current_xy
+
+    vx = diff_x / norm * math.sqrt(50)
+    vy = diff_y / norm * math.sqrt(50)
+
+    return vx, vy
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -118,11 +137,6 @@ def main():
     bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100)
     vx, vy = +5, +5
-
-    bb_imgs, bb_accs = init_bb_imgs() # 大きさの違うばくだん画像リストと加速リストを作る
-    bb_img = bb_imgs[0]
-    bb_rct = bb_img.get_rect()
-    bb_rct.center = random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100)
 
     clock = pg.time.Clock()
     tmr = 0
@@ -159,6 +173,7 @@ def main():
         kk_img = kk_imgs[tuple(sum_mv)]
         screen.blit(kk_img, kk_rct)
 
+        vx, vy = calc_orientation(bb_rct, kk_rct, (vx, vy))  # 
 
         # 時間に応じてばくだんを大きく速くする
         bb_img = bb_imgs[min(tmr//500, 9)]

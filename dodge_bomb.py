@@ -79,22 +79,44 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
 
     return bb_imgs, bb_accs
 
+def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
+    """
+    移動方向ごとのこうかとん画像を作る関数
+    引数：なし
+    戻り値：移動量タプルをキー，こうかとん画像を値とする辞書
+    """
+
+    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)  # こうかとん画像を読み込み
+
+    kk_imgs = {
+        (0, 0): kk_img,
+        (+5, 0): pg.transform.flip(kk_img, True, False),  # 右
+        (-5, 0): kk_img,  # 左
+        (0, -5): pg.transform.rotozoom(kk_img, -90, 1.0),  # 上
+        (0, +5): pg.transform.rotozoom(kk_img, 90, 1.0),  # 下
+        (+5, -5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), 45, 1.0),  # 右上
+        (+5, +5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), -45, 1.0),  # 右下
+        (-5, -5): pg.transform.rotozoom(kk_img, -45, 1.0),  # 左上
+        (-5, +5): pg.transform.rotozoom(kk_img, 45, 1.0),  # 左下
+    }
+
+    return kk_imgs
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     # こうかとんの初期化
-    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
+    kk_imgs = get_kk_imgs()
+    kk_img = kk_imgs[(0, 0)]
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
 
     # 爆弾の初期化
-    bb_img = pg.Surface((20, 20))  # 爆弾用の空のSurface
-    pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)  # 半径10の赤い円を描画
-    bb_img.set_colorkey((0, 0, 0))  # 黒を透明に設定
-    bb_rct = bb_img.get_rect()  #  爆弾のRect
-    bb_rct.centerx = random.randint(0, WIDTH)  # 横初期座標
-    bb_rct.centery = random.randint(0, HEIGHT)  # 縦初期座標
+    bb_imgs, bb_accs = init_bb_imgs()
+    bb_img = bb_imgs[0]
+    bb_rct = bb_img.get_rect()
+    bb_rct.center = random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100)
     vx, vy = +5, +5
 
     bb_imgs, bb_accs = init_bb_imgs() # 大きさの違うばくだん画像リストと加速リストを作る
@@ -129,9 +151,14 @@ def main():
                 sum_mv[1] += mv[1]  # 縦方向の移動量
 
         kk_rct.move_ip(sum_mv)
+
+
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])  # 動きをなかったことにする
+
+        kk_img = kk_imgs[tuple(sum_mv)]
         screen.blit(kk_img, kk_rct)
+
 
         # 時間に応じてばくだんを大きく速くする
         bb_img = bb_imgs[min(tmr//500, 9)]

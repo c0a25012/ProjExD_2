@@ -1,9 +1,10 @@
+import math
 import os
 import random
 import sys
 import time
+
 import pygame as pg
-import math
 
 
 WIDTH, HEIGHT = 1100, 650
@@ -14,6 +15,8 @@ DELTA = {
     pg.K_RIGHT: (+5, 0),  # 右矢印キー
 }
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+
 
 def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     """
@@ -27,6 +30,8 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     if rct.top < 0 or HEIGHT < rct.bottom:  # 縦方向判定
         tate = False
     return yoko, tate
+
+
 
 def gameover(screen: pg.Surface) -> None:
     """
@@ -60,6 +65,8 @@ def gameover(screen: pg.Surface) -> None:
     pg.display.update()
     time.sleep(5)
 
+
+
 def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     """
     大きさの違うばくだん画像と加速用リストを作る関数
@@ -78,6 +85,8 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     bb_accs = [a for a in range(1, 11)]
 
     return bb_imgs, bb_accs
+
+
 
 def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
     """
@@ -102,6 +111,8 @@ def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
 
     return kk_imgs
 
+
+
 def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]) -> tuple[float, float]:
     """
     爆弾がこうかとんに近づく方向ベクトルを計算する関数
@@ -120,6 +131,8 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]
     vy = diff_y / norm * math.sqrt(50)
 
     return vx, vy
+
+
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -151,14 +164,7 @@ def main():
 
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
-        # if key_lst[pg.K_UP]:
-        #     sum_mv[1] -= 5
-        # if key_lst[pg.K_DOWN]:
-        #     sum_mv[1] += 5
-        # if key_lst[pg.K_LEFT]:
-        #     sum_mv[0] -= 5
-        # if key_lst[pg.K_RIGHT]:
-        #     sum_mv[0] += 5
+
         for key, mv in DELTA.items():
             if key_lst[key]:
                 sum_mv[0] += mv[0]  # 横方向の移動量
@@ -173,7 +179,7 @@ def main():
         kk_img = kk_imgs[tuple(sum_mv)]
         screen.blit(kk_img, kk_rct)
 
-        vx, vy = calc_orientation(bb_rct, kk_rct, (vx, vy))  # 
+        vx, vy = calc_orientation(bb_rct, kk_rct, (vx, vy))  # 爆弾がこうかとんに近づく方向を計算する
 
         # 時間に応じてばくだんを大きく速くする
         bb_img = bb_imgs[min(tmr//500, 9)]
